@@ -1,43 +1,5 @@
 # AWS Lambda Terraform module
 
-Terraform module, which creates almost all supported AWS Lambda resources as well as taking care of building and packaging of required Lambda dependencies for functions and layers.
-
-These types of resources supported:
-
-* [Lambda Function](https://www.terraform.io/docs/providers/aws/r/lambda_function.html)
-* [Lambda Layer](https://www.terraform.io/docs/providers/aws/r/lambda_layer_version.html)
-* [Lambda Alias](https://www.terraform.io/docs/providers/aws/r/lambda_alias.html) - using [alias module](https://github.com/terraform-aws-modules/terraform-aws-lambda/tree/master/modules/alias)
-* [Lambda Provisioned Concurrency](https://www.terraform.io/docs/providers/aws/r/lambda_provisioned_concurrency_config.html)
-* [Lambda Async Event Configuration](https://www.terraform.io/docs/providers/aws/r/lambda_function_event_invoke_config.html)
-* [Lambda Permission](https://www.terraform.io/docs/providers/aws/r/lambda_permission.html)
-
-Not supported, yet:
-* [Lambda Event Source Mapping](https://www.terraform.io/docs/providers/aws/r/lambda_event_source_mapping.html)
-
-
-This Terraform module is the part of [serverless.tf framework](https://github.com/antonbabenko/serverless.tf), which aims to simplify all operations when working with the serverless in Terraform:
-
-1. Build and install dependencies - [read more](#build). Requires Python 3.6 or newer.
-2. Create, store, and use deployment packages - [read more](#package).
-3. Create, update, and publish AWS Lambda Function and Lambda Layer - [see usage](#usage).
-4. Create static and dynamic aliases for AWS Lambda Function - [see usage](#usage), see [modules/alias](https://github.com/terraform-aws-modules/terraform-aws-lambda/tree/master/modules/alias).
-5. Do complex deployments (eg, rolling, canary, rollbacks, triggers) - [read more](#deployment), see [modules/deploy](https://github.com/terraform-aws-modules/terraform-aws-lambda/tree/master/modules/deploy).
-
-
-## Features
-
-- [x] Build dependencies for your Lambda Function and Layer.
-- [x] Support builds locally and in Docker (with or without SSH agent support for private builds).
-- [x] Create deployment package or deploy existing (previously built package) from local, from S3, from URL.
-- [x] Store deployment packages locally or in the S3 bucket.
-- [x] Support almost all features of Lambda resources (function, layer, alias, etc.)
-- [x] Lambda@Edge
-- [x] Conditional creation for many types of resources.
-- [x] Control execution of nearly any step in the process - build, package, store package, deploy, update.
-- [x] Control nearly all aspects of Lambda resources (provisioned concurrency, VPC, EFS, dead-letter notification, tracing, async events, IAM role, IAM policies, and more).
-- [x] Support integration with other `serverless.tf` modules like [HTTP API Gateway](https://github.com/terraform-aws-modules/terraform-aws-apigateway-v2) (see [examples there](https://github.com/terraform-aws-modules/terraform-aws-apigateway-v2/tree/master/examples/complete-http)).
-
-
 ## Usage
 
 ### Lambda Function (store package locally)

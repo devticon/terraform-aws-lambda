@@ -236,7 +236,7 @@ variable "provisioned_concurrent_executions" {
 variable "create_current_version_allowed_triggers" {
   description = "Whether to allow triggers on current version of Lambda Function (this will revoke permissions from previous version because Terraform manages only current resources)"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "create_unqualified_alias_allowed_triggers" {
