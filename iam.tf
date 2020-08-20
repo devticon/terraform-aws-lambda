@@ -246,7 +246,7 @@ resource "aws_iam_role_policy_attachment" "additional_many" {
 ###############################
 
 data "aws_iam_policy_document" "additional_inline" {
-  count = local.create_role && var.attach_policy_statements ? 1 : 0
+  count = local.create_role && var.attach_policy_statements && var.policy_statements != null ? 1 : 0
 
   dynamic "statement" {
     for_each = var.policy_statements
@@ -288,14 +288,14 @@ data "aws_iam_policy_document" "additional_inline" {
 }
 
 resource "aws_iam_policy" "additional_inline" {
-  count = local.create_role && var.attach_policy_statements ? 1 : 0
+  count = local.create_role && var.attach_policy_statements && var.policy_statements != null ? 1 : 0
 
   name   = "${var.function_name}-inline"
   policy = data.aws_iam_policy_document.additional_inline[0].json
 }
 
 resource "aws_iam_policy_attachment" "additional_inline" {
-  count = local.create_role && var.attach_policy_statements ? 1 : 0
+  count = local.create_role && var.attach_policy_statements && var.policy_statements != null ? 1 : 0
 
   name       = var.function_name
   roles      = [aws_iam_role.lambda[0].name]

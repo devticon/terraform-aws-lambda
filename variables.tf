@@ -380,7 +380,7 @@ variable "number_of_policies" {
 variable "attach_policy_statements" {
   description = "Controls whether policy_statements should be added to IAM role for Lambda Function"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "trusted_entities" {
@@ -409,8 +409,13 @@ variable "policies" {
 
 variable "policy_statements" {
   description = "Map of dynamic policy statements to attach to Lambda Function role"
-  type        = any
-  default     = {}
+  type        = map(any)
+  //  type        = map(object({
+  //    actions   = list(string)
+  //    resources = list(string)
+  //    effect = string
+  //  }))
+  default = null
 }
 
 variable "file_system_arn" {

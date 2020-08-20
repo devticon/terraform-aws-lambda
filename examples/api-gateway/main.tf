@@ -5,19 +5,13 @@ provider "aws" {
 locals {
   name = "terraform-aws-lambda-test"
 }
-//module "lamda" {
-//  source = "./modules/terraform-aws-lambda"
-//
-//  source_path = "./code/test"
-//  name = local.name
-//  handler = "index.handler"
-//}
+
 module "lambda_function" {
-  source = "./modules/terraform-aws-lambda"
+  source         = "../../"
   create_package = false
-  function_name = local.name
-  handler       = "index.handler"
-  source_path = "./code/test/index.js"
+  function_name  = local.name
+  handler        = "index.handler"
+  source_path    = "./code/test/index.js"
 
   policy_statements = {
     dynamodb = {
@@ -36,26 +30,26 @@ module "lambda_function" {
 }
 
 resource "aws_apigatewayv2_api" "main" {
-  name                       = local.name
-  protocol_type              = "HTTP"
+  name          = local.name
+  protocol_type = "HTTP"
 }
 
 resource "aws_apigatewayv2_stage" "main" {
-  api_id = aws_apigatewayv2_api.main.id
-  name = "main"
+  api_id      = aws_apigatewayv2_api.main.id
+  name        = "main"
   auto_deploy = true
 }
 
 resource "aws_apigatewayv2_route" "test" {
-  api_id = aws_apigatewayv2_api.main.id
+  api_id    = aws_apigatewayv2_api.main.id
   route_key = "GET /test"
-  target = "integrations/${aws_apigatewayv2_integration.test.id}"
+  target    = "integrations/${aws_apigatewayv2_integration.test.id}"
 }
 
 resource "aws_apigatewayv2_integration" "test" {
-  api_id = aws_apigatewayv2_api.main.id
-  integration_type = "AWS_PROXY"
-  integration_uri = module.lambda_function.function_invoke_arn
+  api_id             = aws_apigatewayv2_api.main.id
+  integration_type   = "AWS_PROXY"
+  integration_uri    = module.lambda_function.function_invoke_arn
   integration_method = "POST"
 }
 
