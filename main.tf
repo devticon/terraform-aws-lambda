@@ -1,5 +1,5 @@
 locals {
-  source_is_dir = dirname(var.source_path) == var.source_path
+  source_is_dir = length(regexall(".*\\.[0-9A-Za-z]*$", var.source_path)) == 0 && var.force_source_as_file == false
 
   source_archive      = local.source_is_dir ? data.archive_file.dir[0].output_path : data.archive_file.file[0].output_path
   source_archive_hash = local.source_is_dir ? data.archive_file.dir[0].output_base64sha256 : data.archive_file.file[0].output_base64sha256

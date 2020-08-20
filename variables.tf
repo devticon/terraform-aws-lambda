@@ -472,8 +472,13 @@ variable "s3_bucket" {
 
 variable "source_path" {
   description = "The absolute path to a local file or directory containing your Lambda source code"
-  type        = any # string | list(string | map(any))
+  type        = string
   default     = null
+}
+
+variable "force_source_as_file" {
+  type    = bool
+  default = false
 }
 
 variable "hash_extra" {
