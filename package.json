@@ -1,0 +1,7 @@
+{
+  "name": "@devticon/terraform-aws-lambda",
+  "version": "1.0.0",
+  "repository": "git@github.com:devticon/terraform-aws-lambda.git",
+  "author": "krs <k.kamasa@gmail.com>",
+  "license": "MIT"
+}
