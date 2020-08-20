@@ -1,14 +1,34 @@
 locals {
+  source_is_dir = dirname(var.source_path) == var.source_path
+
+  source_archive      = local.source_is_dir ? data.archive_file.dir[0].output_path : data.archive_file.file[0].output_path
+  source_archive_hash = local.source_is_dir ? data.archive_file.dir[0].output_base64sha256 : data.archive_file.file[0].output_base64sha256
+
   # Use a generated filename to determine when the source code has changed.
   # filename - to get package from local
-  filename    = var.local_existing_package != null ? var.local_existing_package : (var.store_on_s3 ? null : element(concat(data.external.archive_prepare.*.result.filename, [null]), 0))
-  was_missing = var.local_existing_package != null ? ! fileexists(var.local_existing_package) : element(concat(data.external.archive_prepare.*.result.was_missing, [false]), 0)
+  filename = ! var.store_on_s3 ? local.source_archive : null
 
   # s3_* - to get package from S3
   s3_bucket         = var.s3_existing_package != null ? lookup(var.s3_existing_package, "bucket", null) : (var.store_on_s3 ? var.s3_bucket : null)
-  s3_key            = var.s3_existing_package != null ? lookup(var.s3_existing_package, "key", null) : (var.store_on_s3 ? element(concat(data.external.archive_prepare.*.result.filename, [null]), 0) : null)
+  s3_key            = var.s3_existing_package != null ? lookup(var.s3_existing_package, "key", null) : (var.store_on_s3 ? "${var.function_name}.zip" : null)
   s3_object_version = var.s3_existing_package != null ? lookup(var.s3_existing_package, "version_id", null) : (var.store_on_s3 ? element(concat(aws_s3_bucket_object.lambda_package.*.version_id, [null]), 0) : null)
 
+}
+
+data "archive_file" "file" {
+  count       = local.source_is_dir ? 0 : 1
+  output_path = "/tmp/${var.function_name}.zip"
+  type        = "zip"
+
+  source_file = var.source_path
+}
+
+data "archive_file" "dir" {
+  count       = local.source_is_dir ? 1 : 0
+  output_path = "/tmp/${var.function_name}.zip"
+  type        = "zip"
+
+  source_dir = var.source_path
 }
 
 resource "aws_lambda_function" "this" {
@@ -27,7 +47,7 @@ resource "aws_lambda_function" "this" {
   kms_key_arn                    = var.kms_key_arn
 
   filename         = local.filename
-  source_code_hash = (local.filename == null ? false : fileexists(local.filename)) && ! local.was_missing ? filebase64sha256(local.filename) : null
+  source_code_hash = local.source_archive_hash
 
   s3_bucket         = local.s3_bucket
   s3_key            = local.s3_key
@@ -71,8 +91,6 @@ resource "aws_lambda_function" "this" {
   }
 
   tags = var.tags
-
-  depends_on = [null_resource.archive, aws_s3_bucket_object.lambda_package]
 }
 
 resource "aws_lambda_layer_version" "this" {
@@ -85,27 +103,25 @@ resource "aws_lambda_layer_version" "this" {
   compatible_runtimes = length(var.compatible_runtimes) > 0 ? var.compatible_runtimes : [var.runtime]
 
   filename         = local.filename
-  source_code_hash = (local.filename == null ? false : fileexists(local.filename)) && ! local.was_missing ? filebase64sha256(local.filename) : null
+  source_code_hash = local.source_archive_hash
 
   s3_bucket         = local.s3_bucket
   s3_key            = local.s3_key
   s3_object_version = local.s3_object_version
 
-  depends_on = [null_resource.archive, aws_s3_bucket_object.lambda_package]
+  depends_on = [aws_s3_bucket_object.lambda_package]
 }
 
 resource "aws_s3_bucket_object" "lambda_package" {
-  count = var.create && var.store_on_s3 && var.create_package ? 1 : 0
+  count = var.create && var.store_on_s3 ? 1 : 0
 
   bucket        = var.s3_bucket
-  key           = data.external.archive_prepare[0].result.filename
-  source        = data.external.archive_prepare[0].result.filename
-  etag          = fileexists(data.external.archive_prepare[0].result.filename) ? filemd5(data.external.archive_prepare[0].result.filename) : null
+  key           = local.s3_key
+  source        = local.source_archive
+  etag          = local.source_archive_hash
   storage_class = var.s3_object_storage_class
 
   tags = merge(var.tags, var.s3_object_tags)
-
-  depends_on = [null_resource.archive]
 }
 
 data "aws_cloudwatch_log_group" "lambda" {
